@@ -2,6 +2,7 @@ import Image from "next/image";
 import { WEDDING } from "@/lib/config";
 import { Divider, Flowers } from "@/components/Ornaments";
 import { WelcomeForm } from "./WelcomeForm";
+import { MariesLink } from "@/components/MariesLink";
 import couple from "@/public/couple.jpg";
 
 export default function Home() {
@@ -40,6 +41,8 @@ export default function Home() {
         </p>
 
         <WelcomeForm />
+
+        <MariesLink className="mx-auto mt-auto pt-10" />
       </div>
     </main>
   );

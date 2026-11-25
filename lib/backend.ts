@@ -22,7 +22,8 @@ export interface Backend {
   countPhotos(opts: { guestId?: string }): Promise<number>;
   insertPhoto(row: Omit<PhotoRow, "created_at" | "hidden">): Promise<void>;
   setHidden(id: string, hidden: boolean): Promise<void>;
-  deletePhoto(id: string): Promise<void>;
+  /** With guestId, only deletes the photo if it belongs to that guest. Returns false if nothing was deleted. */
+  deletePhoto(id: string, guestId?: string): Promise<boolean>;
   uploadTarget(objectPath: string): Promise<UploadTarget>;
   publicUrl(objectPath: string): string;
 }
@@ -79,13 +80,16 @@ function supabaseBackend(url: string, serviceKey: string): Backend {
       const { error } = await sb.from("photos").update({ hidden }).eq("id", id);
       if (error) throw error;
     },
-    async deletePhoto(id) {
-      const { data, error } = await sb.from("photos").select("path, thumb_path").eq("id", id).maybeSingle();
+    async deletePhoto(id, guestId) {
+      let q = sb.from("photos").select("path, thumb_path").eq("id", id);
+      if (guestId) q = q.eq("guest_id", guestId);
+      const { data, error } = await q.maybeSingle();
       if (error) throw error;
-      if (!data) return;
+      if (!data) return false;
       await sb.storage.from(BUCKET).remove([data.path, data.thumb_path]);
       const del = await sb.from("photos").delete().eq("id", id);
       if (del.error) throw del.error;
+      return true;
     },
     async uploadTarget(objectPath) {
       const { data, error } = await sb.storage.from(BUCKET).createSignedUploadUrl(objectPath);
@@ -151,15 +155,16 @@ function localBackend(): Backend {
         const rows = await all();
         await writeJson(PHOTOS_JSON, rows.map((p) => (p.id === id ? { ...p, hidden } : p)));
       }),
-    deletePhoto: (id) =>
+    deletePhoto: (id, guestId) =>
       withLock(async () => {
         const rows = await all();
-        const row = rows.find((p) => p.id === id);
-        if (!row) return;
+        const row = rows.find((p) => p.id === id && (!guestId || p.guest_id === guestId));
+        if (!row) return false;
         for (const f of [row.path, row.thumb_path]) {
           await fs.rm(path.join(LOCAL_DIR, "files", f), { force: true });
         }
         await writeJson(PHOTOS_JSON, rows.filter((p) => p.id !== id));
+        return true;
       }),
     async uploadTarget(objectPath) {
       return { url: `/api/local/${objectPath}`, headers: {} };

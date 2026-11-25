@@ -100,6 +100,7 @@ export default function MariesPage() {
       <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-6 text-center">
         <h1 className="font-script text-5xl text-terra">Espace des mariés</h1>
         <Divider className="mt-3" />
+        <p className="mt-4 text-brun/70">Réservé à Samicha &amp; Fabrice.</p>
         <form onSubmit={login} className="mt-8 space-y-3">
           <input
             className="field text-center tracking-[.4em]"
@@ -116,6 +117,9 @@ export default function MariesPage() {
           {pinError && <p className="text-sm text-red-700">{pinError}</p>}
           <button className="btn-primary">Entrer</button>
         </form>
+        <Link href="/" className="mt-6 text-sm text-brun/60 underline underline-offset-4">
+          Retour au site
+        </Link>
       </main>
     );
   }

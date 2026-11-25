@@ -16,6 +16,8 @@ export type UploadItem = {
   fatal?: boolean;
   attempts: number;
   file: File;
+  /** Server id once uploaded. */
+  photoId?: string;
   prepared?: Prepared;
 };
 
@@ -95,7 +97,7 @@ export function useUploader(guest: Guest | null, onUploaded: () => void) {
             width: prepared.width,
             height: prepared.height,
           });
-          update(key, { status: "done", progress: 1, prepared: undefined });
+          update(key, { status: "done", progress: 1, prepared: undefined, photoId: target.photoId });
           onUploadedRef.current();
         } catch (e) {
           const err = e as Error & { fatal?: boolean };
@@ -143,6 +145,22 @@ export function useUploader(guest: Guest | null, onUploaded: () => void) {
     [process, update],
   );
 
+  /** Deletes an uploaded photo (the guest changed their mind). */
+  const remove = useCallback(
+    async (key: string) => {
+      const it = itemsRef.current.find((x) => x.key === key);
+      const g = guestRef.current;
+      if (!it?.photoId || !g) return false;
+      const res = await fetch(`/api/photos?id=${it.photoId}&guest=${g.id}`, { method: "DELETE" });
+      if (!res.ok && res.status !== 404) return false;
+      itemsRef.current = itemsRef.current.filter((x) => x.key !== key);
+      setItems(itemsRef.current);
+      onUploadedRef.current();
+      return true;
+    },
+    [],
+  );
+
   const pending = items.filter((it) => it.status !== "done" && !it.fatal).length;
 
   // Resume as soon as the network comes back.
@@ -163,5 +181,5 @@ export function useUploader(guest: Guest | null, onUploaded: () => void) {
     return () => window.removeEventListener("beforeunload", h);
   }, [pending]);
 
-  return { items, add, retry, pending };
+  return { items, add, retry, remove, pending };
 }

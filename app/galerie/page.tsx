@@ -6,6 +6,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { Countdown } from "@/components/Countdown";
 import { Lightbox } from "@/components/Lightbox";
 import { Divider } from "@/components/Ornaments";
+import { MariesLink } from "@/components/MariesLink";
 import { WEDDING } from "@/lib/config";
 import { formatReveal, plural } from "@/lib/format";
 import { useGuest } from "@/lib/useGuest";
@@ -110,7 +111,26 @@ export default function GaleriePage() {
         </ul>
       )}
 
-      {open !== null && <Lightbox photos={photos} index={open} onIndex={setOpen} onClose={() => setOpen(null)} />}
+      <div className="mt-12 text-center">
+        <MariesLink />
+      </div>
+
+      {open !== null && (
+        <Lightbox
+          photos={photos}
+          index={open}
+          onIndex={setOpen}
+          onClose={() => setOpen(null)}
+          onDelete={async (p) => {
+            if (!guest) return false;
+            const res = await fetch(`/api/photos?id=${p.id}&guest=${guest.id}`, { method: "DELETE" });
+            if (!res.ok && res.status !== 404) return false;
+            setOpen(null);
+            await refresh();
+            return true;
+          }}
+        />
+      )}
       <BottomNav />
     </main>
   );

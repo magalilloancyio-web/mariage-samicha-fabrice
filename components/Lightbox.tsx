@@ -2,12 +2,27 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Photo } from "@/lib/types";
+import { DeleteSheet } from "./DeleteSheet";
 
 /** Plein écran : glisser à gauche/droite, télécharger ou enregistrer dans Photos. */
-export function Lightbox({ photos, index, onClose, onIndex }: { photos: Photo[]; index: number; onClose: () => void; onIndex: (i: number) => void }) {
+export function Lightbox({
+  photos,
+  index,
+  onClose,
+  onIndex,
+  onDelete,
+}: {
+  photos: Photo[];
+  index: number;
+  onClose: () => void;
+  onIndex: (i: number) => void;
+  /** Lets a guest delete their own photos. */
+  onDelete?: (photo: Photo) => Promise<boolean>;
+}) {
   const photo = photos[index];
   const touch = useRef<{ x: number; y: number } | null>(null);
   const [saving, setSaving] = useState(false);
+  const [confirming, setConfirming] = useState(false);
 
   const go = useCallback((d: number) => {
     const n = index + d;
@@ -90,9 +105,27 @@ export function Lightbox({ photos, index, onClose, onIndex }: { photos: Photo[];
         )}
       </div>
 
-      <p className="px-4 pt-3 pb-[max(env(safe-area-inset-bottom),16px)] text-center font-script text-3xl text-[#e8c9ae]">
-        {photo.author}
-      </p>
+      <div className="flex items-center justify-center gap-4 px-4 pt-3 pb-[max(env(safe-area-inset-bottom),16px)]">
+        <p className="font-script text-3xl text-[#e8c9ae]">{photo.author}</p>
+        {photo.mine && onDelete && (
+          <button onClick={() => setConfirming(true)} className="flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-sm active:bg-white/20">
+            <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13" /></svg>
+            Supprimer
+          </button>
+        )}
+      </div>
+
+      {confirming && onDelete && (
+        <DeleteSheet
+          src={photo.thumbUrl}
+          onCancel={() => setConfirming(false)}
+          onConfirm={async () => {
+            const ok = await onDelete(photo);
+            if (ok) setConfirming(false);
+            return ok;
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -60,3 +60,16 @@ export async function POST(req: Request) {
   });
   return NextResponse.json({ ok: true });
 }
+
+/** A guest deletes one of their own photos (the guest id acts as their private key). */
+export async function DELETE(req: Request) {
+  const params = new URL(req.url).searchParams;
+  const id = params.get("id") ?? "";
+  const guestId = params.get("guest") ?? "";
+  if (!UUID_RE.test(id) || !UUID_RE.test(guestId)) {
+    return NextResponse.json({ error: "Requête invalide" }, { status: 400 });
+  }
+  const deleted = await backend().deletePhoto(id, guestId);
+  if (!deleted) return NextResponse.json({ error: "Photo introuvable" }, { status: 404 });
+  return NextResponse.json({ ok: true });
+}

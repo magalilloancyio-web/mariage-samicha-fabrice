@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { BottomNav, CameraIcon, ImagesIcon } from "@/components/BottomNav";
+import { DeleteSheet } from "@/components/DeleteSheet";
 import { Divider } from "@/components/Ornaments";
 import { WEDDING } from "@/lib/config";
 import { formatReveal, plural } from "@/lib/format";
@@ -13,7 +14,8 @@ import { useUploader, type UploadItem } from "@/lib/useUploader";
 export default function PhotoPage() {
   const guest = useGuest();
   const { data, refresh } = usePhotos(guest === undefined ? undefined : guest?.id ?? null, 15000);
-  const { items, add, retry, pending } = useUploader(guest ?? null, refresh);
+  const { items, add, retry, remove, pending } = useUploader(guest ?? null, refresh);
+  const [toDelete, setToDelete] = useState<UploadItem | null>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const libraryRef = useRef<HTMLInputElement>(null);
 
@@ -79,21 +81,36 @@ export default function PhotoPage() {
         )}
         {pending > 0 && <p className="mt-1 text-sm font-medium text-terra">Envoi en cours… gardez cette page ouverte.</p>}
 
+        {items.some((i) => i.status === "done") && (
+          <p className="mt-1 text-sm text-brun/60">Une photo ne vous plaît pas&nbsp;? Touchez-la pour la supprimer.</p>
+        )}
         {items.length > 0 && (
           <ul className="mt-4 grid grid-cols-4 gap-2">
             {items.slice(0, 24).map((it) => (
-              <UploadThumb key={it.key} item={it} onRetry={() => retry(it.key)} />
+              <UploadThumb key={it.key} item={it} onRetry={() => retry(it.key)} onDelete={() => setToDelete(it)} />
             ))}
           </ul>
         )}
       </div>
+
+      {toDelete && (
+        <DeleteSheet
+          src={toDelete.preview}
+          onCancel={() => setToDelete(null)}
+          onConfirm={async () => {
+            const ok = await remove(toDelete.key);
+            if (ok) setToDelete(null);
+            return ok;
+          }}
+        />
+      )}
 
       <BottomNav />
     </main>
   );
 }
 
-function UploadThumb({ item, onRetry }: { item: UploadItem; onRetry: () => void }) {
+function UploadThumb({ item, onRetry, onDelete }: { item: UploadItem; onRetry: () => void; onDelete: () => void }) {
   const failed = item.status === "error" && item.fatal;
   return (
     <li className="relative aspect-square overflow-hidden rounded-xl bg-sable/60">
@@ -104,9 +121,14 @@ function UploadThumb({ item, onRetry }: { item: UploadItem; onRetry: () => void 
         </div>
       )}
       {item.status === "done" && (
-        <span className="absolute right-1 bottom-1 flex size-5 items-center justify-center rounded-full bg-terra text-xs text-white" aria-label="Envoyée">
-          ✓
-        </span>
+        <button onClick={onDelete} className="absolute inset-0" aria-label="Supprimer cette photo">
+          <span className="absolute right-1 bottom-1 flex size-5 items-center justify-center rounded-full bg-terra text-xs text-white" aria-hidden>
+            ✓
+          </span>
+          <span className="absolute top-1 right-1 flex size-6 items-center justify-center rounded-full bg-brun/70 text-sm leading-none text-white" aria-hidden>
+            ×
+          </span>
+        </button>
       )}
       {failed && (
         <button onClick={onRetry} className="absolute inset-0 flex flex-col items-center justify-center bg-brun/70 p-1 text-[11px] leading-tight text-white">
