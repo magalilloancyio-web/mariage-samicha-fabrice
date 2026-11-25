@@ -34,7 +34,7 @@ export default function PhotoPage() {
       {/* Bouton principal : ouvre directement l'appareil photo du téléphone */}
       <button
         onClick={() => cameraRef.current?.click()}
-        className="group mx-auto mt-8 flex size-52 flex-col items-center justify-center gap-2 rounded-full border-[6px] border-papier bg-terra text-white shadow-[0_18px_40px_-14px_rgba(122,68,32,.8)] ring-2 ring-terra/40 transition active:scale-95 active:bg-terra-fonce"
+        className="group mx-auto mt-8 flex size-52 flex-col max-[359px]:mt-5 max-[359px]:size-44 items-center justify-center gap-2 rounded-full border-[6px] border-papier bg-terra text-white shadow-[0_18px_40px_-14px_rgba(122,68,32,.8)] ring-2 ring-terra/40 transition active:scale-95 active:bg-terra-fonce"
       >
         <CameraIcon className="size-16" />
         <span className="text-lg font-medium">Prendre une photo</span>

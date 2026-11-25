@@ -18,6 +18,12 @@
   color-scheme: light;
 }
 
+/* Base plus grande (18 px au lieu de 16) : tous les textes et espacements suivent. */
+html {
+  font-size: 112.5%;
+  -webkit-text-size-adjust: 100%;
+}
+
 html,
 body {
   background-color: var(--color-creme);

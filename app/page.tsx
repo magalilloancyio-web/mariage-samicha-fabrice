@@ -21,10 +21,10 @@ export default function Home() {
         <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-b from-transparent to-creme" />
       </div>
 
-      <Flowers className="pointer-events-none absolute right-[-18px] top-[40dvh] w-32 opacity-90" />
+      <Flowers className="pointer-events-none absolute right-[-18px] top-[40dvh] w-32 opacity-90 max-[359px]:hidden" />
 
       <div className="fade-up relative -mt-16 flex flex-1 flex-col px-6 pb-8 text-center">
-        <h1 className="font-script text-[4.2rem] leading-[.95] text-terra sm:text-[5rem]">
+        <h1 className="font-script text-[clamp(3.3rem,17vw,4.2rem)] leading-[.95] text-terra sm:text-[5rem]">
           {WEDDING.bride} <span className="text-[3.2rem]">&amp;</span> {WEDDING.groom}
         </h1>
         <p className="mt-2 font-script text-[2.6rem] leading-none text-terra-fonce">se marient !</p>
